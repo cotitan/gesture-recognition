@@ -4,10 +4,12 @@ import matplotlib.image as MPIMG
 import os
 import cv2
 import math
+import random
 
-# pic_dir = 'database1'
-pic_dir = 'a1'
+pic_dir = 'database1'
+# pic_dir = 'a1'
 fd_len = 128
+pi = 3.1415926
 
 def extract_hand(filename):
 	src = MPIMG.imread(filename)
@@ -19,12 +21,10 @@ def extract_hand(filename):
 		for j in range(0, n):
 			if (blur[i][j] < 128):
 				blur[i][j] = 0
-	# plt.imshow(blur, cmap = 'gray')
-	# plt.show()
 	ctr_r, ctr_c = getCentroid(blur)
 	hand = blur[ctr_r - 44 : ctr_r + 36, ctr_c - 35 : ctr_c + 45]
-	plt.imshow(hand, cmap = 'gray')
-	plt.show()
+	# plt.imshow(hand, cmap = 'gray')
+	# plt.show()
 	return hand
 
 def getCentroid(pic):
@@ -52,7 +52,15 @@ def centroid_dist(boundarys, centroid):
 def eucld_metric(a, b):
 	return math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]))
 
-def getBoundary(pic, cent_r, cent_c):
+def FDFT(shape_signt):
+	fds = np.zeros(fd_len)
+	for n in range(0, fd_len):
+		for i in range(0, fd_len):
+			fds[n] += shape_signt[i] * math.exp(-j * 2 * pi * i * n / fd_len)
+		fds[i] /= fd_len
+	return fds
+
+def getBoundary(pic):
 	edge = cv2.Canny(pic, 100, 250)
 	points = []
 	m, n = edge.shape
@@ -94,3 +102,44 @@ def grayGraph(pic):
 	plt.plot(x, grays, 'r')
 	plt.show()
 
+def gen_dataFile():
+	piclist = os.listdir(pic_dir)
+	label = ['a'] * len(piclist)
+	data = []
+	for i in range(0, len(piclist)):
+		label[i] = piclist[i][0]
+		data.append((label[i], piclist[i]))
+	random.shuffle(data)
+	test = data[0:516]
+	train = data[516:]
+	return train, test
+
+def extract_all_hand():
+	piclist = os.listdir('database1')
+	for each in piclist:
+		print(each)
+		hand = extract('database1/' + each)
+		new_name = 'hands/' + each.split('.')[0] + '_small.tif'
+		MPIMG.imsave(new_name, hand, cmap = 'gray')
+
+def binary_seg(pic, threshold):
+	m, n = pic.shape
+	for i in range(0, m):
+		for j in range(0, n):
+			if pic[i][j] < threshold:
+				pic[i][j] = 0
+
+
+def extract(filename):
+	pic = MPIMG.imread(filename)
+	# blur = cv2.GaussianBlur(pic, (3, 3), 1.0)
+	blur = cv2.medianBlur(pic, 3)
+	copy = blur.copy()
+	binary_seg(blur, 150)
+	ctr = getCentroid(blur)
+	hand = copy[ctr[0]-45 : ctr[0]+35, ctr[1]-40 : ctr[1]+40]
+	m, n = hand.shape
+	binary_seg(hand, 127)
+	# plt.imshow(hand, cmap = 'gray')
+	# plt.show()
+	return hand
