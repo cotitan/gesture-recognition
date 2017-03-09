@@ -63,8 +63,10 @@ def FDFT(shape_signt):
 def getContours(pic):
 	img, contours, hrc = cv2.findContours(pic, cv2.RETR_EXTERNAL,
 			cv2.CHAIN_APPROX_NONE)
-	cts = np.array(contours)
-	cts1 = cts.reshape(cts.shape[1], 2)
+	# shape of contours: (1, 136, 1, 2)
+	# or (2,) and for 0: (136, 1, 2), for 1: (4, 1, 2)
+	cts = np.array(contours[0])
+	cts = cts.reshape(cts.shape[0], 2)
 	return cts
 
 def getBoundary(pic):
