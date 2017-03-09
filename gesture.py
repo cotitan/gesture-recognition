@@ -58,7 +58,7 @@ def FDFT(shape_signt):
 		for i in range(0, fd_len):
 			fds[n] += shape_signt[i] * math.exp(-2 * pi * i * n / fd_len)
 		fds[n] /= fd_len
-	return fds[8:]
+	return fds
 
 def getContours(pic):
 	img, contours, hrc = cv2.findContours(pic, cv2.RETR_EXTERNAL,

@@ -17,12 +17,12 @@ def extract_feature(pic):
 	return fds
 
 def loadDataSet():
-	rows = 2080
+	rows = 1980
 	bound = int(rows * 0.8)
 	files = os.listdir('hands')[0:rows]
 	random.shuffle(files)
 	label = np.zeros(len(files), dtype = 'int32')
-	data = np.zeros((len(files), 120), dtype = 'float32') # 120 = fd_len - 8
+	data = np.zeros((len(files), 128), dtype = 'float32') # 120 = fd_len - 8
 	for i in range(0, rows):
 		label[i] = ord(files[i][0])
 		pic = mpimg.imread('hands/' + files[i])
@@ -56,10 +56,14 @@ def bayes(tr_lb, tr_dt, tst_lb, tst_dt):
 	ret = bayes_model.train(tr_dt, cv2.ml.ROW_SAMPLE, tr_lb)
 	retval, ans = bayes_model.predict(tst_dt)
 	matches = ans[:,0] == tst_lb
-	# success_rate = np.count_nonzero(matches) * 100.0 / ans.size
-	success_rate = np.sum(np.in1d(ans, tst_lb)) / float(tst_lb.shape) * 100
+	wrong = []
+	for i in range(0, matches.size):
+		if (matches[i] == False):
+			wrong.append((chr(tst_lb[i]), chr(ans[i][0])))
+	success_rate = np.count_nonzero(matches) * 100.0 / ans.size
+	# success_rate = np.sum(np.in1d(ans, tst_lb)) / float(tst_lb.size) * 100
 	print('for bayes_model, success rate = ', success_rate )
-	return retval, ans
+	return ans, wrong
 
 def KNN(tr_lb, tr_dt, tst_lb, tst_dt):
 	knn = cv2.ml.KNearest_create()
@@ -77,6 +81,7 @@ def SVM(tr_lb, tr_dt, tst_lb, tst_dt):
 	svm.setKernel(cv2.ml.SVM_LINEAR)
 	svm.setType(cv2.ml.SVM_C_SVC)
 	svm.train(tr_dt, cv2.ml.ROW_SAMPLE, tr_lb)
+	# res.shape = 0.0
 	ret, res = svm.predict(tst_dt)
 	mask = res[:,0] == tst_lb
 	correct = np.count_nonzero(mask)
