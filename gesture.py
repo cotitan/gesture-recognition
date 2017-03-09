@@ -28,7 +28,7 @@ def extract_hand(filename):
 	return hand
 
 def getCentroid(pic):
-	m, n = pic.shape
+	(m, n) = pic.shape
 	r = 0; c = 0
 	count = 0
 	for i in range(0, m):
@@ -56,9 +56,16 @@ def FDFT(shape_signt):
 	fds = np.zeros(fd_len)
 	for n in range(0, fd_len):
 		for i in range(0, fd_len):
-			fds[n] += shape_signt[i] * math.exp(-j * 2 * pi * i * n / fd_len)
-		fds[i] /= fd_len
-	return fds
+			fds[n] += shape_signt[i] * math.exp(-2 * pi * i * n / fd_len)
+		fds[n] /= fd_len
+	return fds[8:]
+
+def getContours(pic):
+	img, contours, hrc = cv2.findContours(pic, cv2.RETR_EXTERNAL,
+			cv2.CHAIN_APPROX_NONE)
+	cts = np.array(contours)
+	cts1 = cts.reshape(cts.shape[1], 2)
+	return cts
 
 def getBoundary(pic):
 	edge = cv2.Canny(pic, 100, 250)
@@ -130,7 +137,7 @@ def binary_seg(pic, threshold):
 				pic[i][j] = 0
 
 
-def extract(filename):
+def hand_segmt(filename):
 	pic = MPIMG.imread(filename)
 	# blur = cv2.GaussianBlur(pic, (3, 3), 1.0)
 	blur = cv2.medianBlur(pic, 3)
