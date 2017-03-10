@@ -69,6 +69,24 @@ def getContours(pic):
 	cts = cts.reshape(cts.shape[0], 2)
 	return cts
 
+def getMaxContour(pic):
+	img, contours, hrc = cv2.findContours(pic, cv2.RETR_EXTERNAL,
+			cv2.CHAIN_APPROX_NONE)
+	# type of contours: list
+	# shape of contours: (1, 136, 1, 2)
+	# or (2,) and for 0: (136, 1, 2), for 1: (4, 1, 2)
+	max_area = 0
+	max_idx = 0
+	area = 0
+	for i in range(0, len(contours)):
+		area = cv2.contourArea(contours[i])
+		if area > max_area:
+			max_idx = i
+			max_area = area
+	cts = np.array(contours[max_idx])
+	cts = cts.reshape(cts.shape[0], 2)
+	return cts
+
 def getBoundary(pic):
 	edge = cv2.Canny(pic, 100, 250)
 	points = []
@@ -152,3 +170,19 @@ def hand_segmt(filename):
 	# plt.imshow(hand, cmap = 'gray')
 	# plt.show()
 	return hand
+
+def hand_segmt1(filename):
+	pic = MPIMG.imread(filename)
+	# blur = cv2.GaussianBlur(pic, (3, 3), 1.0)
+	blur = cv2.medianBlur(pic, 3)
+	copy = blur.copy()
+	binary_seg(blur, 150)
+	ctr = getCentroid(blur)
+	hand = copy[ctr[0]-45 : ctr[0]+35, ctr[1]-40 : ctr[1]+40]
+	m, n = hand.shape
+	binary_seg(hand, 110)
+	# plt.imshow(hand, cmap = 'gray')
+	# plt.show()
+
+	return hand
+
